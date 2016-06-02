@@ -1,54 +1,54 @@
 var fs = require('fs');
+var file = './pets.json';
+var subCommand = process.argv[2];
 
-// var getPets = new Promise()
-
-var args = process.argv.slice(2);
-args = args.map(x => x.toLowerCase());
-
-// TODO if no arguments, give usage message warning to stderror
-if (!args[1]){
+if (!subCommand){
   console.error('Usage: node pets.js [read | create | update | destroy]');
-  // process.exit(9);
+  process.exit(9);
 }
 
-console.log('hello');
+if (subCommand === 'read') {
+  var petIndex = process.argv[3];
 
+  fs.readFile(file, 'utf8', (err,data) => {
+    if (err) { throw err };
+    var pets = JSON.parse(data);
 
-// if READ, read the pets.js file
-var pets;
-if (args[0] === 'read' && !args[1]) {
-  fs.readFile('./pets.json', (err,data) => {
-    if (err) throw err;
-    pets = JSON.parse(data);
-    console.log(pets);
-  });
+    if (!petIndex){
+      console.log(pets);
+    }
+    else if (!pets[petIndex]){
+      console.error('Usage: node pets.js read INDEX\n');
+      process.exit(9);
+    }
+    else {
+      console.log(pets[petIndex]);
+    }
+  })
 }
-else if (args[0] === 'read') {
-  fs.readFile('./pets.json', (err,data) => {
-    if (err) throw err;
-    pets = JSON.parse(data);
-    console.log(pets[args[1]]);
-  });
-}
+else if (subCommand === 'create') {
+  var age = process.argv[3],
+      kind = process.argv[4],
+      name = process.argv[5];
 
-// TODO
-// if args[1] is out of bounds, throw error
-// Usage: node pets.js read INDEX
+  if (age && kind && name){
+    var newPet = {};
+    newPet.age = parseInt(age);
+    newPet.kind = kind;
+    newPet.name = name;
 
+    // append to JSON file
+    fs.readFile(file, 'utf8', (err,data) => {
+      var pets = JSON.parse(data);
+      pets.push(newPet);
 
-// if args[0] is 'create', check for three more args:
-//    AGE KIND NAME
-else if (args[0] === 'create' && args.length === 4){
-  //  then make a new pet object for the pets.json
-  //  remember to make age an integer
-  var age = parseInt(args[1]),
-      kind = args[2],
-      name = args[3];
-
-  var newPet = {
-    'age': age,
-    'kind': kind,
-    'name': name
+      fs.writeFile(file, JSON.stringify(pets), (err) => {
+        if (err) throw err;
+        console.log(newPet.name, 'was added successfully');
+      })
+    })
   }
-
+  else {
+    console.error('Usage: node pets.js create AGE KIND NAME');
+  }
 }
